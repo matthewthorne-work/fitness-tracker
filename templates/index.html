@@ -9,7 +9,7 @@
 <body>
     <main class="container">
         <h1> Workout Logger</h1>
-        <form method="POST" class = "card">
+        <form method="POST" class="card">
             <label>Date
                 <input type="date" name="workout_date" value="{{ today }}" required>
             </label>
@@ -49,8 +49,8 @@
         {% for log in logs %}
             <div class="card log-item">
                 <div class="log-header">
-                <strong>{{ log.exercise }}</strong>
-                <span>{{ log.workout_date }} ({{log.split}})</span>
+                    <strong>{{ log.exercise }}</strong>
+                    <span>{{ log.workout_date }} ({{log.split}})</span>
             </div>
             <p>{{ log.set }} sets x {{ log.reps }} reps @ {{ log.weight }} kg - <strong>Est. 1RM: {{ log.estimated_1rm }} kg</strong></p>
         </div>
