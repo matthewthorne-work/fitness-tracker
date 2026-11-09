@@ -3,7 +3,7 @@ from datetime import date # Import the date class from the datetime module for h
 from flask import Flask, render_template, request, redirect, url_for # Flask is a web framework for building web applications. render_template is used to render HTML templates, request is used to handle incoming HTTP requests, redirect is used to redirect the user to a different URL, and url_for is used to generate URLs for specific routes in the application.
 
 app = Flask(__name__) # Initialize the Flask application
-DB_NAME = "fitness.db" # Assigning the datebase to a variable
+DB_NAME = "fitness.db" # Assigning the database to a variable
 
 def get_db(): 
     conn = sqlite3.connect(DB_NAME)
@@ -14,13 +14,13 @@ def init_db():
     with get_db() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS workouts (
-                id INTERGER PRIMANY KEY AUTOINCREMENT,
-                workout_date TECT NOT NULL,
-                slipt TEXT NOT NULL,
-                exerice TEXT NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                workout_date TEXT NOT NULL,
+                split TEXT NOT NULL,
+                exercise TEXT NOT NULL,
                 weight REAL NOT NULL,
                 sets INTEGER NOT NULL,
-                reps INTGER NOT NULL,
+                reps INTEGER NOT NULL,
                 est_1rm REAL NOT NULL
             )
         """) # This function initializes the database by creating a table called workouts if it does not already exist. The table has columns for id, workout_date, split, exercise, weight, sets, reps, and est_1rm. The id column is an integer primary key that auto-increments with each new entry. The other columns store information about the workout.
@@ -36,7 +36,7 @@ def index():
     if request.method == "POST":
         workout_date = request.form["workout_date"]
         split = request.form["split"].strip()
-        exercise = request.form["exercise"].strip().title
+        exercise = request.form["exercise"].strip().title()
         weight = float(request.form["weight"])
         sets = int(request.form["sets"])
         reps = int(request.form["reps"])
@@ -49,7 +49,18 @@ def index():
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (workout_date, split, exercise, weight, sets, reps, est_1rm))
 
-    return render_template("index.html") # This route handles both GET and POST requests to the root URL ("/"). If the request method is POST, it retrieves the workout data from the form submission, calculates the estimated 1-rep max using the calculate_1rm function, and inserts the data into the workouts table in the database. Finally, it renders the index.html template to display the form and any relevant information.
+        return redirect(url_for("index")) # This route handles both GET and POST requests to the root URL ("/"). If the request method is POST, it retrieves the workout data from the form submission, calculates the estimated 1-rep max using the calculate_1rm function, and inserts the data into the workouts table in the database. Finally, it redirects the user back to the index page.
+
+    with get_db() as conn:
+        logs = conn.execute("""
+            SELECT * FROM workouts ORDER BY workout_date DESC, id DESC limit 20
+            """).fetchall() # This block retrieves the last 20 workout logs from the workouts table in the database, ordered by workout_date in descending order and then by id in descending order. The results are stored in the logs variable.
+        prs = conn.execute("""
+            SELECT exercise, MAX(est_1rm) as best_1rm FROM workouts GROUP BY exercise ORDER BY exercise ASC
+            """).fetchall() # This block retrieves the personal records (PRs) for each exercise from the workouts table in the database. It selects the exercise name and the maximum estimated 1-rep max (est_1rm) for each exercise, grouping the results by exercise and ordering them alphabetically. The results are stored in the prs variable.
+        
+    return render_template("index.html", logs=logs, prs=prs, today=date.today().isoformat) # The retrieved logs are passed to the index.html template for rendering. The template will display the workout logs on the web page.
+
 
 if __name__ == "__main__":
     init_db()
