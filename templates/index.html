@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Fitness Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="container">
+        <h1> Workout Logger</h1>
+        <form method="POST" class = "card">
+            <label>Date
+                <input type="date" name="workout_date" value="{{ today }}" required>
+            </label>
+            <label>Split / Focus
+                <input type="text" name="split" placeholder="e.g., Chest & Triceps" required>
+            </label>
+            <label>Movement
+                <input type="text" name="exercise" placeholder="e.g., Bench Press" required>
+            </label>
+            <div class="row">
+                <label>Weight (kg)
+                    <input type="number" name="weight" step="0.5" placeholder="e.g., 80" required>
+                </label>
+                <label>Sets
+                    <input type="number" name="sets" min="1" placeholder="e.g., 3" required>
+                </label>
+                <label>Reps
+                    <input type="number" name="reps" min="1" placeholder="e.g., 10" required>
+                </label>
+            </div>
+            <button type="submit">Log Workout</button>
+        </form>
+        
+        <h2>Personal Bests (Est. 1RM)</h2>
+        <div class="cards">
+            {% if prs %}
+            <ul>
+                {% for pr in prs %}
+                    <li><strong>{{ pr.exercise }}:</strong> {{ pr.best_1rm }} kg (Heaviest: {{ pr.max_weight }} kg)</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+                <p>No personal bests recorded yet.</p>
+            {% endif %}
+        </div>
+        <h2>Recent Logs</h2>
+        {% for log in logs %}
+            <div class="card log-item">
+                <div class="log-header">
+                <strong>{{ log.exercise }}</strong>
+                <span>{{ log.workout_date }} ({{log.split}})</span>
+            </div>
+            <p>{{ log.set }} sets x {{ log.reps }} reps @ {{ log.weight }} kg - <strong>Est. 1RM: {{ log.estimated_1rm }} kg</strong></p>
+        </div>
+        {% else %}
+            <p>Your logged sets will appear here.</p>
+        {% endfor %}
+    </main>
+</body>
+</html>
