@@ -36,20 +36,29 @@ def index():
     if request.method == "POST":
         workout_date = request.form["workout_date"]
         split = request.form["split"].strip()
-        exercise = request.form["exercise"].strip().title()
-        weight = float(request.form["weight"])
-        sets = int(request.form["sets"])
-        reps = int(request.form["reps"])
 
-        est_1rm = calculate_1rm(weight, reps)
+        exercises = request.form.getlist("exercise[]")
+        weights = request.form.getlist("weight[]")
+        sets_list = request.form.getlist("sets[]")
+        reps_list = request.form.getlist("reps[]")
+
 
         with get_db() as conn:
+
+            for ex, w, s, r in zip(exercises, weights, sets_list, reps_list):
+                if ex.strip():
+                    exercise_name = ex.strip().title()
+                    weight_val = float(w)
+                    sets_val = int(s)
+                    reps_val = int(r)
+                    est_1rm = calculate_1rm(weight_val, reps_val)
+
             conn.execute("""
                 INSERT INTO workouts (workout_date, split, exercise, weight, sets, reps, est_1rm)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (workout_date, split, exercise, weight, sets, reps, est_1rm))
+            """, (workout_date, split, exercise_name, weight_val, sets_val, reps_val, est_1rm)) # This block handles the submission of the workout log form. It retrieves the form data, including the workout date, split, exercises, weights, sets, and reps. It then calculates the estimated 1-rep max (est_1rm) for each exercise using the calculate_1rm function. Finally, it inserts the workout log into the workouts table in the database.
 
-        return redirect(url_for("index")) # This route handles both GET and POST requests to the root URL ("/"). If the request method is POST, it retrieves the workout data from the form submission, calculates the estimated 1-rep max using the calculate_1rm function, and inserts the data into the workouts table in the database. Finally, it redirects the user back to the index page.
+        return redirect(url_for("index")) # This will redirect the user back to the index page after submitting the workout log form.
 
     with get_db() as conn:
         logs = conn.execute("""
